@@ -1,13 +1,45 @@
-import io from 'socket.io-client';
+//THIS IS THE CLIENT
 
-const API_URL = 'http://localhost:5000';
+import io from "socket.io-client";
+
+const API_URL =
+  window.location.hostname === "loaclhost"
+    ? "http://localhost:5000"
+    : "https://ssanjay-game-api.now.sh/";
 
 const socket = io.connect(API_URL);
 
-socket.on('connect',()=>{
-    console.log('connected to the server from client');
-})
+const mice = {};
 
-socket.on('message-client-connected',(message)=>{
-    console.log(message);
-})
+socket.on("connect", () => {
+  console.log("connected to the server from client");
+});
+
+socket.on("message-client-disconnected", id => {
+  if (mice[id]) {
+    document.body.removeChild(mice[id]);
+  }
+});
+
+socket.on("mousemove", event => {
+  if (socket.id !== event.id) {
+    let mouse = mice[event.id];
+    if (!mouse) {
+      const span = document.createElement("span");
+      span.style.position = "absolute";
+      span.textContent = "🐁";
+      mice[event.id] = span;
+      mouse = span;
+      document.body.appendChild(span);
+    }
+    mouse.style.top = event.y + "px";
+    mouse.style.left = event.x + "px";
+  }
+});
+
+document.addEventListener("mousemove", event => {
+  socket.emit("mousemove", {
+    x: event.clientX,
+    y: event.clientY
+  });
+});

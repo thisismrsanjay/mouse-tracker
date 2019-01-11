@@ -9642,15 +9642,42 @@ var _socket = _interopRequireDefault(require("socket.io-client"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var API_URL = 'http://localhost:5000';
+//THIS IS THE CLIENT
+var API_URL = window.location.hostname === "loaclhost" ? "http://localhost:5000" : "https://ssanjay-game-api.now.sh/";
 
 var socket = _socket.default.connect(API_URL);
 
-socket.on('connect', function () {
-  console.log('connected to the server from client');
+var mice = {};
+socket.on("connect", function () {
+  console.log("connected to the server from client");
 });
-socket.on('message-client-connected', function (message) {
-  console.log(message);
+socket.on("message-client-disconnected", function (id) {
+  if (mice[id]) {
+    document.body.removeChild(mice[id]);
+  }
+});
+socket.on("mousemove", function (event) {
+  if (socket.id !== event.id) {
+    var mouse = mice[event.id];
+
+    if (!mouse) {
+      var span = document.createElement("span");
+      span.style.position = "absolute";
+      span.textContent = "🐁";
+      mice[event.id] = span;
+      mouse = span;
+      document.body.appendChild(span);
+    }
+
+    mouse.style.top = event.y + "px";
+    mouse.style.left = event.x + "px";
+  }
+});
+document.addEventListener("mousemove", function (event) {
+  socket.emit("mousemove", {
+    x: event.clientX,
+    y: event.clientY
+  });
 });
 },{"socket.io-client":"node_modules/socket.io-client/lib/index.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
@@ -9679,7 +9706,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49276" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "65159" + '/');
 
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
